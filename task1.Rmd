@@ -17,28 +17,37 @@ knitr::opts_chunk$set(echo = TRUE)
 imagem1 = read.table("imagem1.txt")
 imagem2 = read.table("imagem2.txt")
 imagem3 = read.table("imagem3.txt")
+
+# change colnames
+names = c("y", "x", "label", "NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")
+colnames(imagem1) = names
+colnames(imagem2) = names
+colnames(imagem3) = names
 ```
 
 # b
 As for the first image, 37.3% pixels are labeled as "not cloud", 34.1% are labeled as "cloud" and 28.6% have no labels. As for the second image, there are 43.8% labeled as "not cloud", 17.8% labeled as "cloud" and 38.5% with no labels. As for the third image, 29.3% are labeled as "not cloud", 18.4% are labeled as "cloud" and 52.3% have no labels.
 ```{r summarize the data}
 imagem1 %>%
-  group_by(V3, .drop=TRUE) %>%
+  group_by(label, .drop=TRUE) %>%
   summarise(n()/dim(.)[1])
 
 imagem2 %>%
-  group_by(V3, .drop=TRUE) %>%
+  group_by(label, .drop=TRUE) %>%
   summarise(n()/dim(.)[1])
 
 imagem3 %>%
-  group_by(V3, .drop=TRUE) %>%
+  group_by(label, .drop=TRUE) %>%
   summarise(n()/dim(.)[1])
 ```
 
+pattern: no single pixels are labeled as cloud. Pixels are spatially related to each other in a sense that the neighbour of a pixel labeled as cloud tend to be cloudy. IID damei.
+
+
 ```{r plot maps, cache=TRUE, fig.height=8}
 p1 = imagem1 %>%
-  filter(V3!=0) %>%
-  ggplot(aes(x = V2, y = V1, col = factor(V3)))+
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
   geom_point()+
   scale_color_manual(values = c("grey", "white"))+
   labs(x = "x", y = "y")+
@@ -49,8 +58,8 @@ p1 = imagem1 %>%
         panel.background = element_rect(fill = "black"))
 
 p2 = imagem2 %>%
-  filter(V3!=0) %>%
-  ggplot(aes(x = V2, y = V1, col = factor(V3)))+
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
   geom_point()+
   scale_color_manual(values = c("grey", "white"))+
   labs(x = "x", y = "y")+
@@ -61,8 +70,8 @@ p2 = imagem2 %>%
         panel.background = element_rect(fill = "black"))
 
 p3 = imagem3 %>%
-  filter(V3!=0) %>%
-  ggplot(aes(x = V2, y = V1, col = factor(V3)))+
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
   geom_point()+
   scale_color_manual(values = c("grey", "white"))+
   labs(x = "x", y = "y")+
@@ -86,17 +95,27 @@ imagem1 %>%
 
 ```{r corplot, cache=TRUE}
 # pairwise correlation between features
-library(ggcorrplot)
 imagem1 %>%
-  select(V4:V11) %>%
+  select(NDAI:AN) %>%
   ggcorr(label = TRUE, label_alpha = TRUE, low = "steelblue", mid = "white", high = "darkred")
 ```
 
-CORR: V6 --- 4&5 MISR view direction (Af&An) --- V10&V11
+```{r}
+imagem2 %>%
+  select(NDAI:AN) %>%
+  ggcorr(label = TRUE, label_alpha = TRUE, low = "steelblue", mid = "white", high = "darkred")
+```
 
-SD: V5 --- k=5 MISR(An) --- V11 (Not too strong) 
+```{r}
+imagem3%>%
+  select(NDAI:AN) %>%
+  ggcorr(label = TRUE, label_alpha = TRUE, low = "steelblue", mid = "white", high = "darkred")
+```
 
-NDAI: V4 --- (Not too strong)
+Only show imagem1.
+CORR: --- 5th MISR view direction (An)
+
+NDAI: SD
 
 V11 (An) --- V10&9&8 (AF & BF & CF)
 
@@ -108,30 +127,33 @@ V8 (CF) --- V7 (DF)
 
 ```{r relationship between labels and features}
 imagem1[,3:11] %>%
-  filter(V3!=0)  %>%
-  group_by(V3) %>%
-  pivot_longer(cols = "V4":"V11", names_to = "feature") %>%
-  ggplot(aes(x = V3, y = value, group = V3))+
+  filter(label!=0)  %>%
+  group_by(label) %>%
+  pivot_longer(cols = "NDAI":"AN", names_to = "feature") %>%
+  ggplot(aes(x = label, y = value, group = label))+
   geom_boxplot(outlier.size = 0.1)+
   facet_wrap(~feature, scales = "free")
 ```
 
 High NDAI(V4) correspond to cloud (label=1). [make sense]
 
-High Radiance angle AN (V11), AF (V10), BF (V9) correspond to no cloud.
-
-High Radiance angle DF (V7) correspond to cloud.
-
 High SD (V5) -- (not smooth surfaces) correspond to cloud. [make sense]
 
-High CORR (V6) correspond to cloud. (the difference is not much, < 0.3). However, high values of CORR should indicate either cloud-free or low altitude cloud. [Not included because the difference is small?]
+High CORR (V6) correspond to cloud. (the difference is not much, < 0.3). However, high values of CORR should indicate either cloud-free or low altitude cloud. [low altitude cloud] [Need interpretation]
+
+High Radiance angle AN (V11), AF (V10), BF (V9) correspond to no cloud.
+
+High Radiance angle DF (V7) correspond to cloud. [Not included]
+
 
 ```{r single boxplot}
-imagem1[,3:11] %>%
-  filter(V3!=0)  %>%
-  group_by(V3) %>%
-  ggplot(aes(x = V3, y = V6, group = V3))+
-  geom_boxplot(outlier.size = 0.1)
+imagem3[,3:11] %>%
+  filter(label!=0)  %>%
+  group_by(label) %>%
+  pivot_longer(cols = "NDAI":"AN", names_to = "feature") %>%
+  ggplot(aes(x = label, y = value, group = label))+
+  geom_boxplot(outlier.size = 0.1)+
+  facet_wrap(~feature, scales = "free")
 ```
 
 
