@@ -25,6 +25,17 @@ colnames(imagem2) = names
 colnames(imagem3) = names
 ```
 
+# a
+According to today's global climate models, doubling of atmospheric carbon dioxide levels will cause global surface air temperatures to increase by 1.5-3.5 K throughout the 21st century. Climate in the Arctic may be the most sensitive, and study of the topic requires accurate Arctic-wide measurements, among which cloud coverage plays an important role. Different from cloud coverage measurements in other regions, similar scattering properties between clouds and ice- and snow- covered surfaces bring additional challenges. Therefore, the study aims to propose new operational Arctic cloud detection algorithms. 
+
+The data were collected with the help of the Multiangle Imaging SpectroRadiometer (MISR). The MISR sensors contain cameras viewing Earth scenes at nine different angles (70.5° Df, 60.0° Cf, 45.6° Bf, 26.1° Af in the forward direction, 0.0° An in the nadir direction, 26.1° Aa, 45.6° Ba, 60.0° Ca, 70.5° Da in the aft direction.) in four spectral bands (blue, green, red and near-infrared). There are 233 geographically distinct but overlapping MISR paths, paths are covered every 16 days, each path has 180 blocks, and each MISR pixel covers a 275m $\times$ 275m region on the ground. The vast amount of data produced by MISR also calls for new algorithms. There are two algorithms based on MISR used in other origins, while they both have difficulties in polar regions. The stereo-derived cloud mask(SDCM) compares retrieved object heights with the known terrain heights, and the angular signature cloud mask (ASCM) compares solar spectral reflctances between different view angles, which is called the band-differenced angular signature, but both of them can't detect low clouds. The study attempts to solve the problem by searching for surface pixels instead of cloudy ones.
+
+Specifically, the data used in this study were collected from 10 MISR orbits of path 26 over the Arctic, northern Greenland, and BaffinBay from April 28 through September 19, 2022. After excluding data units of open water surfaces, the data contained 57 data units with 7114248 1.1-km resolution pixels with 36 radiation measurements for each pixel. Moreover, to evaluate the algorithms, one of the authors handlabeled the data, and the expert labels cover about 71.5% of the total valid pixels. 
+
+To conclude, the study presents new and operational algorithms for Arctic cloud detection and further climate study. It's shown that three physical features, the linear correlation of radiation measurements from different MISR view directions, the standard deviation of MISR nadir red radiation measurements within a small region, and a normalized difference angular index is enough to tell clouds from ice- and snow-covered surfaces.
+
+More abstractly, the study demonstrates the great promise of statistical science. Statisticians can be directly involved in the data processing and closely collaborated with scientists from other fields, and work out innovative and effective solutions.
+
 # b
 As for the first image, 37.3% pixels are labeled as "not cloud", 34.1% are labeled as "cloud" and 28.6% have no labels. As for the second image, there are 43.8% labeled as "not cloud", 17.8% labeled as "cloud" and 38.5% with no labels. As for the third image, 29.3% are labeled as "not cloud", 18.4% are labeled as "cloud" and 52.3% have no labels.
 ```{r summarize the data}
