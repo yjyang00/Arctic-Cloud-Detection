@@ -55,7 +55,6 @@ imagem3 %>%
 
 pattern: no single pixels are labeled as cloud. Pixels are spatially related to each other in a sense that the neighbour of a pixel labeled as cloud tend to be cloudy. IID damei.
 
-
 ```{r plot maps, cache=TRUE, fig.height=8}
 p1 = imagem1 %>%
   filter(label!=0) %>%
