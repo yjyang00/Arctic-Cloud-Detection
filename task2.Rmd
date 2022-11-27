@@ -36,13 +36,13 @@ imagem1$y
 ```
 
 
-We first use the systematic assignment to split each image. The pattern for the split with $k=4$ is shown in the figure where k is the number of folds in one image. We justify the validity of the systematic assignment as it ensures lower dissimilarity between folds. As for the $3k$ folds of all the three images, we randomly select $2k$ folds as the training set, $\lceil 0.5k \rceil$ folds as the validation set and $\lfloor 0.5k \rfloor$ folds as the test set, which approximately yields a $4:1:1$ allocation for the three sets.
+We first use the systematic assignment to split each image. The pattern for the split with $k=4$ is shown in the figure where k is the number of folds in one image. We justify the validity of the systematic assignment as it ensures lower dissimilarity between folds. As for the $3k$ blocks of all the three images, we randomly select $2k$ folds as the training set, $\lceil 0.5k \rceil$ folds as the validation set and $\lfloor 0.5k \rfloor$ folds as the test set, which approximately yields a $4:1:1$ allocation for the three sets.
+
+Referefence: https://onlinelibrary.wiley.com/doi/full/10.1111/ecog.02881
 
 ```{r}
-# Referefence: https://onlinelibrary.wiley.com/doi/full/10.1111/ecog.02881
 systematic.split = function(image, k){
 
-  # prepare for the split
   image = image %>%
     mutate(level.x = as.factor(cut(image$x, breaks = 2*k)),
            level.y = as.factor(cut(image$y, breaks = 2*k)),)
@@ -73,7 +73,54 @@ imagem1.syst %>%
   #scale_color_grey(start = 0.8, end = 0.2)
 ```
 
+# Split image 1 using buffering:
 
+The second splitting method separates the training set from the validation set and the test set by creating a buffer. The cross in the middle of the image is used as the validation set. One of the four corners is randomly selected into the test set and the remaining three corners are in the training set. Although the pixels in the buffer area are not used as either the training set or the test set, the width of the pixels can be modified such that the fraction of the unused data can be controlled. One advantage of this split over the first one is that it generates spatially separated folds and ensures that no validation data or test data abuts the training data.
+
+Reference (buffering): https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13107
+
+```{r}
+buf.split = function(image, width){
+  xcut = quantile(image$x, c(4/9, 5/9, 1))
+  ycut = quantile(image$y, c(4/9, 5/9, 1))
+  
+  image = image %>%
+    mutate(
+      level.x = case_when(
+        ( (x < xcut[1]-width) | (x > xcut[2]+width) ) ~ 1,
+        ( x > xcut[1] & x < xcut[2]) ~ 0,
+        TRUE ~ 2),
+      level.y = case_when(
+        ( (y < ycut[1]-width) | (y > ycut[2]+width) ) ~ 1,
+        ( y > ycut[1] & y < ycut[2]) ~ 0,
+        TRUE ~ 2
+          )
+    )
+  
+  image = image %>%
+    mutate(block = case_when(
+      (level.x*level.y == 0) ~ 0,
+      (level.x*level.y == 1) ~ 1,
+      TRUE ~ 2
+    ))
+  return (image)
+}
+```
+
+```{r}
+imagem1.buf = buf.split(imagem1, width = 5)
+imagem2.buf = buf.split(imagem2, width = 5)
+imagem3.buf = buf.split(imagem3, width = 5)
+
+# plot the split of image1
+imagem1.buf %>%
+  ggplot(aes(x = x, y = y, col = factor(block)))+
+  geom_point()+
+  labs(x = "x", y = "y", color = "Block")+
+  scale_color_brewer(palette = "Blues")+
+  theme_bw()
+  #scale_color_grey(start = 0.8, end = 0.2)
+```
 
 
 
