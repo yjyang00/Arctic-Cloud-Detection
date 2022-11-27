@@ -1,0 +1,86 @@
+---
+title: "task2"
+author: "Yanjiao"
+date: "2022-11-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(lambda.r)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load data}
+imagem1 = read.table("imagem1.txt")
+imagem2 = read.table("imagem2.txt")
+imagem3 = read.table("imagem3.txt")
+
+# change colnames
+names = c("y", "x", "label", "NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")
+colnames(imagem1) = names
+colnames(imagem2) = names
+colnames(imagem3) = names
+```
+
+# Split image 1 using systematic assignment:
+```{r}
+summary(imagem1$y)
+```
+
+```{r}
+summary(imagem1$x)
+```
+
+```{r}
+imagem1$y
+```
+
+
+We first use the systematic assignment to split each image. The pattern for the split with $k=4$ is shown in the figure where k is the number of folds in one image. We justify the validity of the systematic assignment as it ensures lower dissimilarity between folds. As for the $3k$ folds of all the three images, we randomly select $2k$ folds as the training set, $\lceil 0.5k \rceil$ folds as the validation set and $\lfloor 0.5k \rfloor$ folds as the test set, which approximately yields a $4:1:1$ allocation for the three sets.
+
+```{r}
+# Referefence: https://onlinelibrary.wiley.com/doi/full/10.1111/ecog.02881
+systematic.split = function(image, k){
+
+  # prepare for the split
+  image = image %>%
+    mutate(level.x = as.factor(cut(image$x, breaks = 2*k)),
+           level.y = as.factor(cut(image$y, breaks = 2*k)),)
+  levels(image$level.x)=as.character(1:(2*k))
+  levels(image$level.y)=as.character(1:(2*k))
+
+  image = image %>%
+    mutate(
+      mod = (as.integer(level.x) + as.integer(level.y)) %% k) %>%
+    mutate(fold = mod+1)
+  
+  return(image)
+}
+```
+
+```{r}
+imagem1.syst = systematic.split(imagem1, k=4)
+imagem2.syst = systematic.split(imagem2, k=4)
+imagem3.syst = systematic.split(imagem3, k=4)
+
+# plot the split of image1
+imagem1.syst %>%
+  ggplot(aes(x = x, y = y, col = factor(fold)))+
+  geom_point()+
+  labs(x = "x", y = "y", color = "Fold")+
+  scale_color_brewer(palette = "GnBu")+
+  theme_bw()
+  #scale_color_grey(start = 0.8, end = 0.2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
