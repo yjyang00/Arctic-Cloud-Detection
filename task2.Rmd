@@ -75,21 +75,21 @@ table(image.syst$fold)
 
 ```{r}
 # create the test data
-image.test = NULL
+image.syst.test = NULL
 set.seed(111111)
 
 idx.test = c()
 for (i in 1:2){
   idx = sample(1:length(unique(image.syst$fold)), size = 1)
-  image.test = rbind(image.test, image.syst[image.syst$fold==idx, ])
+  image.syst.test = rbind(image.syst.test, image.syst[image.syst$fold==idx, ])
   idx.test = c(idx.test, idx)
 }
 
 # create training data
-image.train = image.syst[!(image.syst$fold %in% idx.test), ]
+image.syst.train = image.syst[!(image.syst$fold %in% idx.test), ]
 
-table(image.test$fold)
-table(image.train$fold)
+table(image.syst.test$fold)
+table(image.syst.train$fold)
 ```
 
 ```{r}
