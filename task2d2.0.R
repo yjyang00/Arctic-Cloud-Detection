@@ -118,12 +118,10 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   for(i in 1:K){
     
     # training set
-    datatrain = data %>% 
-      filter(fold != fold.sample[i %% length(fold) + 1])
+    datatrain = data[!(data$fold != fold.sample[i %% length(fold) + 1]), ]
     
     # validation set
-    dataval = data %>%
-      filter(fold == fold.sample[i %% length(fold) + 1])
+    dataval = data[data$fold == fold.sample[i %% length(fold) + 1], ]
     
     # classifiers
     model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
@@ -180,4 +178,4 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   
 }
 
-a = CVmaster(classifier = "LDA", xtrain = image.syst.train, ytrain = image.syst.train$label, K=12, loss="accuracy")
+a = CVmaster(classifier = "LDA", xtrain = image.buf.train[4:12], ytrain = image.buf.train$label, K=8, loss="accuracy")
