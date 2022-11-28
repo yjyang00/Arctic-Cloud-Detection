@@ -83,6 +83,74 @@ acc.test[4,2]=testacc("Naive Bayes",image.buf.train,image.buf.test)
 acc.test[5,2]=testacc("knn",image.buf.train,image.buf.test)
 ```
 
+# b
 
+```{r}
+library(pROC)
+library(ROCit)
+```
+
+```{r}
+  datatrain = train %>% 
+    filter(label != 0)
+  datatrain$label[datatrain$label == -1] = 0
+  datatest = test %>% 
+    filter(label != 0)
+  datatest$label[datatest$label == -1] = 0
+  
+  model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
+  
+  # logistic regression
+
+    glm.fit = glm(model_formula, data = datatrain, family = binomial)
+    glm.probs = predict(glm.fit, datatest, type="response")
+    glm.pred = rep(0, length(glm.probs))
+    glm.pred[glm.probs > 0.5] = 1
+    pred = glm.pred
+
+    
+     # LDA
+    lda.fit = lda(model_formula, data = datatrain)
+    lda.pred = predict(lda.fit, datatest)
+    pred = lda.pred$class
+    
+  # QDA
+    qda.fit = qda(model_formula, data = datatrain)
+    qda.pred = predict(qda.fit, datatest)
+    pred = qda.pred$class
+    
+  # Naive Bayes
+    nb.fit = naiveBayes(model_formula, data = datatrain)
+    nb.pred = predict(nb.fit, datatest)
+    pred = nb.pred
+    
+  # KNN
+    train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    knn.pred = knn(train.X, test.X, datatrain$label, k=5)
+    pred = knn.pred
+  
+  roc_score=roc(datatest$label,glm.pred)
+  plot(roc_score)
+  roc_curve(glm.pred,datatest$label)
+ 
+  ## Warning: package 'ROCit' was built under R version 3.5.2
+  ROCit_obj <- rocit(score=glm.probs,class=datatest$label)
+  plot(ROCit_obj)
+  
+  ROCit_obj=rocit(score=nb.pred,class=datatest$label)
+   plot(ROCit_obj)
+   
+   roc_score=roc(datatest$label,as.numeric(nb.pred))
+  plot(roc_score)
+  
+  roc(datatest$label,glm.probs)
+  roc_score=roc(datatest$label,glm.probs)
+  plot(roc_score)
+  
+  roc(datatest$label,glm.probs,plot=TRUE,print.thres=TRUE)
+  
+  roc(datatest$label,lda.pred$posterior[,2],plot=TRUE,print.thres=TRUE)
+```
 
 
