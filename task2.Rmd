@@ -90,6 +90,7 @@ imagem1.syst %>%
   scale_color_brewer(palette = "GnBu")+
   theme_bw()
   #scale_color_grey(start = 0.8, end = 0.2)
+ggsave("sys asgmt.png")
 ```
 
 # Split image 1 using buffering:
@@ -131,9 +132,9 @@ buf.split = function(image, width, i){
 ```
 
 ```{r}
-imagem1.buf = buf.split(imagem1, width = 3, i = 1)
-imagem2.buf = buf.split(imagem2, width = 3, i = 2)
-imagem3.buf = buf.split(imagem3, width = 3, i = 3)
+imagem1.buf = buf.split(imagem1, width = 5, i = 1)
+imagem2.buf = buf.split(imagem2, width = 5, i = 2)
+imagem3.buf = buf.split(imagem3, width = 5, i = 3)
 
 # 0: test, -1: buffer
 table(imagem1.buf$fold)
@@ -168,6 +169,8 @@ imagem1.buf %>%
   scale_color_brewer(palette = "Blues")+
   theme_bw()
   #scale_color_grey(start = 0.8, end = 0.2)
+
+ggsave("buffer.png")
 ```
 
 # Baseline
