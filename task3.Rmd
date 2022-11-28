@@ -1,0 +1,88 @@
+---
+title: "task2"
+author: "Huiying"
+date: "2022-11-27"
+output: html_document
+---
+
+# a
+
+```{r}
+## test accuracy
+testacc=function(classifier, train, test){
+  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn")
+  if(!(classifier %in% classifiers)){
+    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn.")
+    break
+  }
+  datatrain = train %>% 
+    filter(label != 0)
+  datatrain$label[datatrain$label == -1] = 0
+  datatest = test %>% 
+    filter(label != 0)
+  datatest$label[datatest$label == -1] = 0
+  
+  model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
+  
+  # logistic regression
+  if(classifier == "logistic"){
+    glm.fit = glm(model_formula, data = datatrain, family = binomial)
+    glm.probs = predict(glm.fit, datatest, type="response")
+    glm.pred = rep(0, length(glm.probs))
+    glm.pred[glm.probs > 0.5] = 1
+    pred = glm.pred
+  }
+    
+  # LDA
+  if(classifier == "LDA"){
+    lda.fit = lda(model_formula, data = datatrain)
+    lda.pred = predict(lda.fit, datatest)
+    pred = lda.pred$class
+  }
+    
+  # QDA
+  if(classifier == "QDA"){
+    qda.fit = qda(model_formula, data = datatrain)
+    qda.pred = predict(qda.fit, datatest)
+    pred = qda.pred$class
+  }
+    
+  # Naive Bayes
+  if(classifier == "Naive Bayes"){
+    nb.fit = naiveBayes(model_formula, data = datatrain)
+    nb.pred = predict(nb.fit, datatest)
+    pred = nb.pred
+  }
+    
+  # KNN
+  if(classifier == "knn"){
+    train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    knn.pred = knn(train.X, test.X, datatrain$label, k=5)
+    pred = knn.pred
+  }
+  
+  acc=mean(pred==datatest$label)
+  return(acc)
+}
+```
+
+```{r}
+acc.test=matrix(NA,nrow=5,ncol=2)
+colnames(acc.test)=c("systematic","buffering")
+rownames(acc.test)=c("logistic","LDA","QDA","Naive Bayes","knn")
+acc.test[1,1]=testacc("logistic",image.syst.train,image.syst.test)
+acc.test[2,1]=testacc("LDA",image.syst.train,image.syst.test)
+acc.test[3,1]=testacc("QDA",image.syst.train,image.syst.test)
+acc.test[4,1]=testacc("Naive Bayes",image.syst.train,image.syst.test)
+acc.test[5,1]=testacc("knn",image.syst.train,image.syst.test)
+acc.test[1,2]=testacc("logistic",image.buf.train,image.buf.test)
+acc.test[2,2]=testacc("LDA",image.buf.train,image.buf.test)
+acc.test[3,2]=testacc("QDA",image.buf.train,image.buf.test)
+acc.test[4,2]=testacc("Naive Bayes",image.buf.train,image.buf.test)
+acc.test[5,2]=testacc("knn",image.buf.train,image.buf.test)
+```
+
+
+
+
