@@ -24,17 +24,6 @@ colnames(imagem3) = names
 ```
 
 # Split image 1 using systematic assignment:
-```{r}
-summary(imagem1$y)
-```
-
-```{r}
-summary(imagem1$x)
-```
-
-```{r include=FALSE}
-imagem1$y
-```
 
 We first use the systematic assignment to split each image. The pattern for the split in image 1 is shown in the figure. The systematic assignment is a valid split as it ensures lower dissimilarity between folds. Among all the 12 blocks of the three images, 2 blocks are selected as the test set. As for the remaining 10 blocks, one block is used for validation and the rest for training when the number of folds $k$ is not greater than 10. If $k$ is larger than 10 (which is not a common case), after each of the 10 blocks has been used for validation, we randomly select one block to construct the additive $k-10$ folds. If $k=12$, for instance, after all the 10 blocks have been in the validation set in turn, we randomly select one block for validation and use the remaining 9 blocks for the training set and repeat this process again such that there are 12 cross validation sets in total. This paper uses 10-fold cross validation to assess the fit of models in the next section. We claim that resampling from the 10 blocks when more than 10 folds are needed generally is reasonable because the number of folds is usually between 5 and 10. [Maybe more justification later]
 
@@ -168,7 +157,6 @@ table(image.buf.train$fold)
 ```
 
 
-
 ```{r}
 # plot the split of image1
 imagem1.buf %>%
@@ -182,9 +170,52 @@ imagem1.buf %>%
   #scale_color_grey(start = 0.8, end = 0.2)
 ```
 
+# Baseline
+To ensure the ensuing classifier in section 3 is not trivial, we first examine the accuracy of a trivial classifier on the validation set and test set that are previously obtained from the two splitting methods. The trivial classifier assumes all labels to be no cloud. Table 
+
+```{r baseline}
+# accuracy on validation set (1st split)
+set.seed(111)
+
+idx = sample(unique(image.syst.train$fold), size = 1)
+image.syst.val = image.syst.train[image.syst.train$fold==idx,]
+
+acc.val.syst = sum(image.syst.val$label==-1)/length(image.syst.val$label)
+
+# accuracy on validation set (2nd split)
+idx = sample(unique(image.buf.train$fold), size = 1)
+image.buf.val = image.buf.train[image.buf.train$fold==idx,]
+
+acc.val.buf = sum(image.buf.val$label==-1)/length(image.buf.val$label)
+
+# accuracy on test set (1st split)
+acc.test.syst = sum(image.syst.test$label==-1)/length(image.syst.test$label)
+
+# accuracy on test set (2nd split)
+acc.test.buf = sum(image.buf.test$label==-1)/length(image.buf.test$label)
+
+# output the table
+rbind(
+  data.frame(split = 1, set = "validation", accuracy = acc.val.syst),
+  data.frame(split = 1, set = "test", accuracy = acc.test.syst),
+  data.frame(split = 2, set = "validation", accuracy = acc.val.buf),
+  data.frame(split = 2, set = "test", accuracy = acc.test.buf))
+
+```
 
 
+# (TO DELETE AT THE END!)
+Dataset:
 
+## FIRST SPLIT (systematic assignment):
+test set: image.syst.test
+train set & val set (10 folds): image.syst.train
+
+## SECOND SPLIT (buffer):
+test set: image.buf.test
+train set & val set (12 folds): image.buf.train
+
+In Baseline, one fold is RANDOMLY selected from the training set for VALIDATION. That is why you will see datasets named as `image.syst.val` and `image.buf.val`.
 
 
 
