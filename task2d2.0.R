@@ -3,6 +3,7 @@ library(class)
 library(randomForest)
 library(tidyverse)
 library(caret)
+library(gbm)
 
 # Split the data first
 # first method: systematic assignment
@@ -32,7 +33,7 @@ image.syst = rbind(imagem1.syst, imagem2.syst, imagem3.syst)
 
 # create the test data for the first split
 image.syst.test = NULL
-set.seed(111111)
+set.seed(111)
 idx.test = c()
 
 for (i in 1:2){
@@ -95,11 +96,11 @@ image.buf.train = rbind(imagem1.buf[!(imagem1.buf$fold %in% c(0,-1)), ],
 CVmaster = function(classifier, xtrain, ytrain, K, loss){
   
   # set up
-  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn", "rf")
-  losses=c("accuracy")
+  classifiers = c("logistic", "LDA", "QDA", "Naive Bayes", "knn", "rf", "boosting")
+  losses = c("accuracy")
   
   if(!(classifier %in% classifiers)){
-    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, rf.")
+    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, rf, boosting.")
     break
   }
   if(!(loss%in%losses)){
@@ -107,10 +108,11 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
     break
   }
   
+  # 0: no cloud, 1: cloud
   df = data.frame(xtrain, label = ytrain)
   data = df %>% 
     filter(label != 0)
-  data$label[data$label == -1] = 0
+  data$label[data$label == -1] = 0 
   fold = unique(data$fold)
   fold.sample = sample(fold)
   
@@ -121,7 +123,7 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   for(i in 1:K){
     
     # training set
-    datatrain = data[!(data$fold != fold.sample[i %% length(fold) + 1]), ]
+    datatrain = data[!(data$fold == fold.sample[i %% length(fold) + 1]), ]
     
     # validation set
     dataval = data[data$fold == fold.sample[i %% length(fold) + 1], ]
@@ -131,59 +133,81 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
     
     # logistic regression
     if(classifier == "logistic"){
+      
       glm.fit = glm(model_formula, data = datatrain, family = binomial)
       glm.probs = predict(glm.fit, dataval, type="response")
       glm.pred = rep(0, length(glm.probs))
       glm.pred[glm.probs > 0.5] = 1
       pred = glm.pred
+      
     }
     
     # LDA
     if(classifier == "LDA"){
+      
       lda.fit = lda(model_formula, data = datatrain)
       lda.pred = predict(lda.fit, dataval)
       pred = lda.pred$class
+      
     }
     
     # QDA
     if(classifier == "QDA"){
+      
       qda.fit = qda(model_formula, data = datatrain)
       qda.pred = predict(qda.fit, dataval)
       pred = qda.pred$class
+      
     }
     
     # Naive Bayes
     if(classifier == "Naive Bayes"){
+      
       nb.fit = naiveBayes(model_formula, data = datatrain)
       nb.pred = predict(nb.fit, dataval)
       pred = nb.pred
+      
     }
     
     # KNN
     if(classifier == "knn"){
+      
       train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
       val.X = dataval[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
       knn.pred = knn(train.X, val.X, datatrain$label, k=5)
       pred = knn.pred
+      
     }
     
     # Random forest
     if (classifier == "rf"){
-      rf = randomForest(x = datatrain[,1:8], y = as.factor(datatrain$label), mtry = 3)
+      
+      train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+      val.X = dataval[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+      rf = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3)
       pred = predict(rf, dataval)
-      conf = confusionMatrix(pred, as.factor(dataval$label))$table
+      
+    }
+    
+    # gradient boosting
+    if (classifier == "boosting"){
+      
+      boost = gbm(as.character(label) ~ NDAI+SD+CORR+DF+CF+BF+AF+AN, 
+                  data = datatrain, 
+                  distribution = "bernoulli", 
+                  n.trees = 3000, 
+                  interaction.depth = 4)
+      
+      pred = predict(boost, dataval)
+      pred[pred >= 0.5] = 1
+      pred[pred < 0.5] = 0
     }
     
     # loss functions
     if(loss == "accuracy"){
       
-      if (classifier == "rf"){
-        acc = sum(diag(conf)) / sum(conf)
-      }
+      acc = mean(pred == dataval$label)
       
-      else{
-        acc = mean(pred == dataval$label)
-      }
     }
     
     # save results
@@ -194,6 +218,3 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   return(as.data.frame(cvresult))
   
 }
-a = CVmaster(classifier = "rf",
-             xtrain = image.buf.train[4:12], 
-             ytrain = image.buf.train$label, K=8, loss="accuracy")
