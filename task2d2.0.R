@@ -177,5 +177,3 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   return(as.data.frame(cvresult))
   
 }
-
-a = CVmaster(classifier = "LDA", xtrain = image.buf.train[4:12], ytrain = image.buf.train$label, K=8, loss="accuracy")
