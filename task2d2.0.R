@@ -1,5 +1,8 @@
 library(MASS)
 library(class)
+library(randomForest)
+library(tidyverse)
+library(caret)
 
 # Split the data first
 # first method: systematic assignment
@@ -92,11 +95,11 @@ image.buf.train = rbind(imagem1.buf[!(imagem1.buf$fold %in% c(0,-1)), ],
 CVmaster = function(classifier, xtrain, ytrain, K, loss){
   
   # set up
-  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn")
+  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn", "rf")
   losses=c("accuracy")
   
   if(!(classifier %in% classifiers)){
-    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn.")
+    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, rf.")
     break
   }
   if(!(loss%in%losses)){
@@ -164,9 +167,23 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
       pred = knn.pred
     }
     
+    # Random forest
+    if (classifier == "rf"){
+      rf = randomForest(x = datatrain[,1:8], y = as.factor(datatrain$label), mtry = 3)
+      pred = predict(rf, dataval)
+      conf = confusionMatrix(pred, as.factor(dataval$label))$table
+    }
+    
     # loss functions
     if(loss == "accuracy"){
-      acc = mean(pred == dataval$label)
+      
+      if (classifier == "rf"){
+        acc = sum(diag(conf)) / sum(conf)
+      }
+      
+      else{
+        acc = mean(pred == dataval$label)
+      }
     }
     
     # save results
@@ -177,3 +194,4 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
   return(as.data.frame(cvresult))
   
 }
+a = CVmaster(classifier = "rf", )
