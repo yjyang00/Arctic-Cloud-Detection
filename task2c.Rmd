@@ -1,0 +1,65 @@
+---
+title: "task2"
+author: "Huiying"
+date: "2022-11-27"
+output: html_document
+---
+
+## c
+
+```{r}
+imagebind=rbind(data.frame(imagem1,image=1),
+                data.frame(imagem2,image=2),
+                data.frame(imagem3,image=3))
+## correlation 
+cor(imagebind[,4:11],imagebind[,3])
+```
+
+```{r}
+## pca
+pca_prcomp=prcomp(imagebind[,4:11],center=TRUE,scale. = TRUE)
+summary(pca_prcomp)
+loadings=pca_prcomp$rotation
+round(loadings[,1:4],3)
+ggplot() + geom_point(aes(x = loadings[, 1], y=loadings[, 2])) +
+  geom_text(aes(x = loadings[, 1], y=loadings[, 2], label=rownames(loadings))) +
+  labs(x = "Loading 1", y = "Loading 2")
+```
+
+```{r}
+pca_prcomp=prcomp(imagem1[,4:11],center=TRUE,scale. = TRUE)
+summary(pca_prcomp)
+loadings=pca_prcomp$rotation
+round(loadings[,1:4],3)
+ggplot() + geom_point(aes(x = loadings[, 1], y=loadings[, 2])) +
+  geom_text(aes(x = loadings[, 1], y=loadings[, 2], label=rownames(loadings))) +
+  labs(x = "Loading 1", y = "Loading 2")
+eigenvalues=pca_prcomp$sdev^2
+eigenvalues
+```
+
+```{r}
+set.seed(1)
+library(mlbench)
+library(caret)
+control=trainControl(method="repeatedcv",number=10,repeats=3)
+model=train(imagebind[,4:11],imagebind[,3],method="rf",preProcess="scale",trControl=control)
+importance=varImp(model,scale=FALSE)
+print(importance)
+plot(importance)
+```
+
+```{r}
+rPartMod=train(label~.,data=imagebind[,3:11],method="rpart")
+rpartImp=varImp(rPartMod)
+print(rpartImp)
+```
+
+```{r}
+library(Boruta)
+boruta_output=Boruta(label~.,data=na.omit(imagebind[,3:11]),doTrace=0)
+plot(boruta_output,cex.axis=.7,las=2,xlab="",main="Variable Importance")
+```
+
+ref https://www.machinelearningplus.com/machine-learning/feature-selection/
+

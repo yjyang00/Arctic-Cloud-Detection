@@ -1,0 +1,38 @@
+---
+title: "task2"
+author: "Huiying"
+date: "2022-11-27"
+output: html_document
+---
+
+```{r}
+## systematic, logistic, accuracy
+data=image.syst.train%>%filter(label!=0)
+data$label[data$label==-1]=0
+datatrain=data%>%filter(fold!=1)
+dataval=data%>%filter(fold==1)
+glm.fit=glm(label~NDAI+SD+CORR+DF+CF+BF+AF+AN,data=datatrain,family=binomial)
+glm.probs=predict(glm.fit,dataval,type="response")
+glm.pred=rep(0,length(glm.probs))
+glm.pred[glm.probs>0.5]=1
+mean(glm.pred==dataval$label)
+```
+
+```{r}
+## K folds
+K=10
+cvresult=matrix(NA,ncol=2,nrow=K)
+colnames(cvresult)=c("fold","acc")
+for(i in 1:K){
+  datatrain=data%>%filter(fold!=i)
+  dataval=data%>%filter(fold==i)
+  glm.fit=glm(label~NDAI+SD+CORR+DF+CF+BF+AF+AN,data=datatrain,family=binomial)
+  glm.probs=predict(glm.fit,dataval,type="response")
+  glm.pred=rep(0,length(glm.probs))
+  glm.pred[glm.probs>0.5]=1
+  acc=mean(glm.pred==dataval$label)
+  cvresult[i,1]=i
+  cvresult[i,2]=acc
+}
+```
+
