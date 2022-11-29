@@ -13,6 +13,7 @@ library(tidyverse)
 library(caret)
 library(gbm)
 library(e1071)
+library(pROC)
 ```
 
 
@@ -126,11 +127,6 @@ acc.test
 # b
 
 ```{r}
-library(pROC)
-library(ROCit)
-```
-
-```{r}
 ## systematic
 datatrain = image.syst.train %>% 
   filter(label != 0)
@@ -203,6 +199,82 @@ plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")
 ```
 
 ```{r}
-ggplot(glm.roc)
+rocvalue=rbind(
+  coords(glm.roc, "best"),
+  coords(lda.roc, "best"),
+  coords(qda.roc, "best"),
+  coords(nb.roc, "best"),
+  coords(rf.roc, "best"),
+  coords(adaboost.roc, "best")
+)
+rocvalue
+```
+ref:
+https://stats.stackexchange.com/questions/61521/cut-off-point-in-a-roc-curve-is-there-a-simple-function
+https://blog.csdn.net/solo7773/article/details/8699693?spm=1001.2101.3001.6650.11&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-11-8699693-blog-122552363.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-11-8699693-blog-122552363.pc_relevant_aa&utm_relevant_index=15
+
+# c
+
+```{r}
+# logistic
+glm.exp = rep(0, length(glm.probs))
+glm.exp[glm.probs > rocvalue[1,1]] = 1
+glm.cm=confusionMatrix(data=as.factor(glm.exp), reference = as.factor(datatest$label))
+glm.cm
+```
+
+
+```{r}
+# lda
+lda.exp=rep(0,length(lda.score))
+lda.exp[lda.score>rocvalue[2,1]]=1
+lda.cm=confusionMatrix(data=as.factor(lda.exp), reference = as.factor(datatest$label))
+lda.cm
+```
+
+
+```{r}
+# qda
+qda.exp=rep(0,length(qda.score))
+qda.exp[qda.score>rocvalue[3,1]]=1
+qda.cm=confusionMatrix(data=as.factor(qda.exp), reference = as.factor(datatest$label))
+qda.cm
+```
+
+
+```{r}
+# nb
+nb.exp=rep(0,length(nb.score))
+nb.exp[nb.score>rocvalue[4,1]]=1
+nb.cm=confusionMatrix(data=as.factor(nb.exp), reference = as.factor(datatest$label))
+nb.cm
+```
+
+
+```{r}
+# rf
+rf.exp=rep(0,length(rf.score))
+rf.exp[rf.score>rocvalue[5,1]]=1
+rf.cm=confusionMatrix(data=as.factor(rf.exp), reference = as.factor(datatest$label))
+rf.cm
+```
+
+
+```{r}
+# adaboost
+adaboost.exp=rep(0,length(adaboost.score))
+adaboost.exp[adaboost.score>rocvalue[6,1]]=1
+adaboost.cm=confusionMatrix(data=as.factor(adaboost.exp), reference = as.factor(datatest$label))
+adaboost.cm
+```
+
+```{r}
+sum=length(datatest$label)
+round(glm.cm$table/sum,3)
+round(lda.cm$table/sum,3)
+round(qda.cm$table/sum,3)
+round(nb.cm$table/sum,3)
+round(rf.cm$table/sum,3)
+round(adaboost.cm$table/sum,3)
 ```
 
