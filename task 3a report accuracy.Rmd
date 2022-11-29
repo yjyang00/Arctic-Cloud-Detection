@@ -40,7 +40,7 @@ acc.cv.syst = rbind(
   ) %>%
   pivot_wider(id_cols = model, names_from = accuracy.fold, values_from = accuracy.acc)
 
-acc.cv.syst["average"]=rowMeans(acc.cv.syst[,2:11])
+acc.cv.syst["average"]=rowMeans(acc.cv.syst[,2:ncol(acc.cv.syst)])
 ```
 
 ```{r}
@@ -69,36 +69,5 @@ acc.cv.buf = rbind(
   ) %>%
   pivot_wider(id_cols = model, names_from = accuracy.fold, values_from = accuracy.acc)
 
-acc.cv.buf["average"]=rowMeans(acc.cv.buf[,2:11])
+acc.cv.buf["average"]=rowMeans(acc.cv.buf[,2:ncol(acc.cv.buf)])
 ```
-
-```{r}
-# accuracies across folds (systematic assignment)
-acc.cv5.syst = rbind(
-  data.frame(model = "Logistic", 
-             accuracy = CVmaster(classifier = "logistic", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "LDA", 
-             accuracy = CVmaster(classifier = "LDA", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "QDA", 
-             accuracy = CVmaster(classifier = "QDA", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "Naive Bayes", 
-             accuracy = CVmaster(classifier = "Naive Bayes", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "KNN", 
-             accuracy = CVmaster(classifier = "knn", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "Random Forest", 
-             accuracy = CVmaster(classifier = "rf", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy")),
-  data.frame(model = "Adaboost", 
-             accuracy = CVmaster(classifier = "adaboost", xtrain = image.syst.train[,4:12], ytrain = image.syst.train$label,
-                                 K = 5, loss = "accuracy"))
-  ) %>%
-  pivot_wider(id_cols = model, names_from = accuracy.fold, values_from = accuracy.acc)
-
-acc.cv5.syst["average"]=rowMeans(acc.cv5.syst[,2:6])
-```
-
