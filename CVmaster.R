@@ -175,9 +175,7 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
       
       train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
       val.X = dataval[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-      knn.pred = knn(train.X, val.X, datatrain$label, k=5)
-      pred = knn.pred
-      
+      knn.pred = knn(train.X, val.X, datatrain$label, k=10, prob = TRUE)
     }
     
     # Random forest
