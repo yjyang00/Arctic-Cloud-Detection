@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 library(ggplot2)
 library(tidyverse)
+library(dplyr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -46,7 +47,7 @@ systematic.split = function(image, i){
       mod = (as.integer(level.x) + as.integer(level.y)) %% T) %>%
     mutate(fold = mod+4*i-3) 
   
-  return(image %>% select(-c(level.x, level.y, mod)))
+  return(image %>% dplyr::select(-c(level.x, level.y, mod)))
 }
 ```
 
@@ -127,7 +128,7 @@ buf.split = function(image, width, i){
       (level.x == 2 & level.y == 2) ~ 4*i,
       TRUE ~ -1)
     )
-  return (image %>% select(-c(level.x, level.y)))
+  return (image %>% dplyr::select(-c(level.x, level.y)))
 }
 ```
 
@@ -147,7 +148,7 @@ table(imagem2.buf$fold)
 image.buf.test = rbind(imagem1.buf[imagem1.buf$fold==0,],
                        imagem2.buf[imagem2.buf$fold==0,],
                        imagem3.buf[imagem3.buf$fold==0,]) %>%
-  select(-fold) 
+  dplyr::select(-fold) 
 
 # create training data
 image.buf.train = rbind(imagem1.buf[!(imagem1.buf$fold %in% c(0,-1)), ],
@@ -205,20 +206,6 @@ rbind(
   data.frame(split = 2, set = "test", accuracy = acc.test.buf))
 
 ```
-
-
-# (TO DELETE AT THE END!)
-Dataset:
-
-## FIRST SPLIT (systematic assignment):
-test set: image.syst.test
-train set & val set (10 folds): image.syst.train
-
-## SECOND SPLIT (buffer):
-test set: image.buf.test
-train set & val set (12 folds): image.buf.train
-
-In Baseline, one fold is RANDOMLY selected from the training set for VALIDATION. That is why you will see datasets named as `image.syst.val` and `image.buf.val`.
 
 
 
