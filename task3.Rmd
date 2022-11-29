@@ -5,14 +5,25 @@ date: "2022-11-27"
 output: html_document
 ---
 
+```{r}
+library(MASS)
+library(class)
+library(randomForest)
+library(tidyverse)
+library(caret)
+library(gbm)
+library(e1071)
+```
+
+
 # a
 
 ```{r}
 ## test accuracy
 testacc=function(classifier, train, test){
-  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn")
+  classifiers=c("logistic","LDA","QDA","Naive Bayes","knn","rf","adaboost")
   if(!(classifier %in% classifiers)){
-    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn.")
+    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, Random Forest, Adaboost.")
     break
   }
   datatrain = train %>% 
@@ -62,25 +73,54 @@ testacc=function(classifier, train, test){
     pred = knn.pred
   }
   
+  # Random forest
+  if (classifier == "rf"){
+      
+    train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+    rf = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3)
+    pred = predict(rf, datatest)
+      
+  }
+    
+  # Adaboost
+  if (classifier == "adaboost"){
+      
+    boost = gbm(as.character(label) ~ NDAI+SD+CORR+DF+CF+BF+AF+AN, 
+                data = datatrain, 
+                distribution = "adaboost", 
+                n.trees = 3000, 
+                interaction.depth = 4)
+      
+    pred = predict(boost, datatest)
+    pred[pred >= 0.5] = 1
+    pred[pred < 0.5] = 0
+  }  
+  
   acc=mean(pred==datatest$label)
   return(acc)
 }
 ```
 
 ```{r}
-acc.test=matrix(NA,nrow=5,ncol=2)
+acc.test=matrix(NA,nrow=7,ncol=2)
 colnames(acc.test)=c("systematic","buffering")
-rownames(acc.test)=c("logistic","LDA","QDA","Naive Bayes","knn")
+rownames(acc.test)=c("logistic","LDA","QDA","Naive Bayes","knn","Random Forest","Adaboost")
 acc.test[1,1]=testacc("logistic",image.syst.train,image.syst.test)
 acc.test[2,1]=testacc("LDA",image.syst.train,image.syst.test)
 acc.test[3,1]=testacc("QDA",image.syst.train,image.syst.test)
 acc.test[4,1]=testacc("Naive Bayes",image.syst.train,image.syst.test)
 acc.test[5,1]=testacc("knn",image.syst.train,image.syst.test)
+acc.test[6,1]=testacc("rf",image.syst.train,image.syst.test)
+acc.test[7,1]=testacc("adaboost",image.syst.train,image.syst.test)
 acc.test[1,2]=testacc("logistic",image.buf.train,image.buf.test)
 acc.test[2,2]=testacc("LDA",image.buf.train,image.buf.test)
 acc.test[3,2]=testacc("QDA",image.buf.train,image.buf.test)
 acc.test[4,2]=testacc("Naive Bayes",image.buf.train,image.buf.test)
 acc.test[5,2]=testacc("knn",image.buf.train,image.buf.test)
+acc.test[6,2]=testacc("rf",image.buf.train,image.buf.test)
+acc.test[7,2]=testacc("adaboost",image.buf.train,image.buf.test)
+acc.test
 ```
 
 # b
@@ -91,66 +131,78 @@ library(ROCit)
 ```
 
 ```{r}
-  datatrain = train %>% 
-    filter(label != 0)
-  datatrain$label[datatrain$label == -1] = 0
-  datatest = test %>% 
-    filter(label != 0)
-  datatest$label[datatest$label == -1] = 0
+## systematic
+datatrain = image.syst.train %>% 
+  filter(label != 0)
+datatrain$label[datatrain$label == -1] = 0
+datatest = image.syst.test %>% 
+  filter(label != 0)
+datatest$label[datatest$label == -1] = 0
   
-  model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
+model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
   
-  # logistic regression
+# logistic regression
+glm.fit = glm(model_formula, data = datatrain, family = binomial)
+glm.probs = predict(glm.fit, datatest, type="response")
+glm.pred = rep(0, length(glm.probs))
+glm.pred[glm.probs > 0.5] = 1
+glm.roc=roc(datatest$label,glm.probs)
+    
+# LDA
+lda.fit = lda(model_formula, data = datatrain)
+lda.pred = predict(lda.fit, datatest)
+lda.score=lda.pred$posterior[,2]
+lda.roc=roc(datatest$label,lda.score)
+    
+# QDA
+qda.fit = qda(model_formula, data = datatrain)
+qda.pred = predict(qda.fit, datatest)
+qda.score=qda.pred$posterior[,2]
+qda.roc=roc(datatest$label,qda.score)
 
-    glm.fit = glm(model_formula, data = datatrain, family = binomial)
-    glm.probs = predict(glm.fit, datatest, type="response")
-    glm.pred = rep(0, length(glm.probs))
-    glm.pred[glm.probs > 0.5] = 1
-    pred = glm.pred
+# Naive Bayes
+nb.fit = naiveBayes(model_formula, data = datatrain)
+nb.pred = predict(nb.fit, datatest)
+nb.score=predict(nb.fit,datatest,type="raw")[,2]
+nb.roc=roc(datatest$label,nb.score)
+  
+# KNN
+train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+knn.pred = knn(train.X, test.X, datatrain$label, k=5)
 
-    
-     # LDA
-    lda.fit = lda(model_formula, data = datatrain)
-    lda.pred = predict(lda.fit, datatest)
-    pred = lda.pred$class
-    
-  # QDA
-    qda.fit = qda(model_formula, data = datatrain)
-    qda.pred = predict(qda.fit, datatest)
-    pred = qda.pred$class
-    
-  # Naive Bayes
-    nb.fit = naiveBayes(model_formula, data = datatrain)
-    nb.pred = predict(nb.fit, datatest)
-    pred = nb.pred
-    
-  # KNN
-    train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-    test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-    knn.pred = knn(train.X, test.X, datatrain$label, k=5)
-    pred = knn.pred
+# Random forest
+train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+rf.fit = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3)
+rf.pred = predict(rf.fit, datatest)
+rf.score=predict(rf.fit,datatest,type="prob")[,2]
+rf.roc=roc(datatest$label,rf.score)
   
-  roc_score=roc(datatest$label,glm.pred)
-  plot(roc_score)
-  roc_curve(glm.pred,datatest$label)
- 
-  ## Warning: package 'ROCit' was built under R version 3.5.2
-  ROCit_obj <- rocit(score=glm.probs,class=datatest$label)
-  plot(ROCit_obj)
-  
-  ROCit_obj=rocit(score=nb.pred,class=datatest$label)
-   plot(ROCit_obj)
-   
-   roc_score=roc(datatest$label,as.numeric(nb.pred))
-  plot(roc_score)
-  
-  roc(datatest$label,glm.probs)
-  roc_score=roc(datatest$label,glm.probs)
-  plot(roc_score)
-  
-  roc(datatest$label,glm.probs,plot=TRUE,print.thres=TRUE)
-  
-  roc(datatest$label,lda.pred$posterior[,2],plot=TRUE,print.thres=TRUE)
+# Adaboost
+adaboost.fit = gbm(as.character(label) ~ NDAI+SD+CORR+DF+CF+BF+AF+AN, 
+            data = datatrain, 
+            distribution = "adaboost", 
+            n.trees = 3000, 
+            interaction.depth = 4)
+adaboost.pred = predict(adaboost.fit, datatest)
+adaboost.pred[adaboost.pred >= 0.5] = 1
+adaboost.pred[adaboost.pred < 0.5] = 0
+adaboost.score=predict(adaboost.fit,datatest)
+adaboost.roc=roc(datatest$label,adaboost.score)
 ```
 
+```{r}
+par(mfrow=c(2,3))
+plot(glm.roc,print.thres=TRUE,print.auc=TRUE,main="Logistic Regression")
+plot(lda.roc,print.thres=TRUE,print.auc=TRUE,main="LDA")
+plot(qda.roc,print.thres=TRUE,print.auc=TRUE,main="QDA")
+plot(nb.roc,print.thres=TRUE,print.auc=TRUE,main="Naive Bayes")
+plot(rf.roc,print.thres=TRUE,print.auc=TRUE,main="Random Forest")
+plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")
+```
+
+```{r}
+ggplot(glm.roc)
+```
 
