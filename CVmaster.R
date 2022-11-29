@@ -4,6 +4,7 @@ library(randomForest)
 library(tidyverse)
 library(caret)
 library(gbm)
+library(e1071)
 
 # Split the data first
 # first method: systematic assignment
@@ -22,7 +23,7 @@ systematic.split = function(image, i){
       mod = (as.integer(level.x) + as.integer(level.y)) %% T) %>%
     mutate(fold = mod+4*i-3) 
   
-  return(image %>% select(-c(level.x, level.y, mod)))
+  return(image %>% dplyr::select(-c(level.x, level.y, mod)))
 }
 
 imagem1.syst = systematic.split(imagem1, i=1)
@@ -73,7 +74,7 @@ buf.split = function(image, width, i){
       (level.x == 2 & level.y == 2) ~ 4*i,
       TRUE ~ -1)
     )
-  return (image %>% select(-c(level.x, level.y)))
+  return (image %>% dplyr::select(-c(level.x, level.y)))
 }
 
 imagem1.buf = buf.split(imagem1, width = 3, i = 1)
@@ -84,7 +85,7 @@ imagem3.buf = buf.split(imagem3, width = 3, i = 3)
 image.buf.test = rbind(imagem1.buf[imagem1.buf$fold==0,],
                        imagem2.buf[imagem2.buf$fold==0,],
                        imagem3.buf[imagem3.buf$fold==0,]) %>%
-  select(-fold) 
+  dplyr::select(-fold) 
 
 # create training data for the second split
 image.buf.train = rbind(imagem1.buf[!(imagem1.buf$fold %in% c(0,-1)), ],
@@ -96,11 +97,11 @@ image.buf.train = rbind(imagem1.buf[!(imagem1.buf$fold %in% c(0,-1)), ],
 CVmaster = function(classifier, xtrain, ytrain, K, loss){
   
   # set up
-  classifiers = c("logistic", "LDA", "QDA", "Naive Bayes", "knn", "rf", "boosting")
+  classifiers = c("logistic", "LDA", "QDA", "Naive Bayes", "knn", "rf", "adaboost")
   losses = c("accuracy")
   
   if(!(classifier %in% classifiers)){
-    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, rf, boosting.")
+    print("Please choose classifiers from logistic, LDA, QDA, Naive Bayes, knn, rf, adaboost")
     break
   }
   if(!(loss%in%losses)){
@@ -189,12 +190,12 @@ CVmaster = function(classifier, xtrain, ytrain, K, loss){
       
     }
     
-    # gradient boosting
-    if (classifier == "boosting"){
+    # Adaboost
+    if (classifier == "adaboost"){
       
       boost = gbm(as.character(label) ~ NDAI+SD+CORR+DF+CF+BF+AF+AN, 
                   data = datatrain, 
-                  distribution = "bernoulli", 
+                  distribution = "adaboost", 
                   n.trees = 3000, 
                   interaction.depth = 4)
       
