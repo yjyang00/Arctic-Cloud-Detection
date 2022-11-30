@@ -68,9 +68,9 @@ testacc=function(classifier, train, test){
     
   # KNN
   if(classifier == "knn"){
-    train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-    test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-    knn.pred = knn(train.X, test.X, datatrain$label, k=5)
+    train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+    test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+    knn.pred = knn(train.X, test.X, datatrain$label, k=10)
     pred = knn.pred
   }
   
@@ -163,9 +163,12 @@ nb.score=predict(nb.fit,datatest,type="raw")[,2]
 nb.roc=roc(datatest$label,nb.score)
   
 # KNN
-train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
-knn.pred = knn(train.X, test.X, datatrain$label, k=5)
+train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+knn.pred = knn(train.X, test.X, datatrain$label, k=10)
+knn.score = attr(knn.pred,"prob") 
+knn.roc=roc(datatest$label,knn.score)
+
 
 # Random forest
 train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
@@ -195,7 +198,7 @@ plot(lda.roc,print.thres=TRUE,print.auc=TRUE,main="LDA")
 plot(qda.roc,print.thres=TRUE,print.auc=TRUE,main="QDA")
 plot(nb.roc,print.thres=TRUE,print.auc=TRUE,main="Naive Bayes")
 plot(rf.roc,print.thres=TRUE,print.auc=TRUE,main="Random Forest")
-plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")
+plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")z
 ```
 
 ```{r}
@@ -276,5 +279,14 @@ round(qda.cm$table/sum,3)
 round(nb.cm$table/sum,3)
 round(rf.cm$table/sum,3)
 round(adaboost.cm$table/sum,3)
+```
+
+```{r}
+train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+
+knn.pred=knn(train.X, test.X, datatrain$label, k=10)
+table(knn.pred, datatest$label)
+mean(knn.pred == datatest$label)
 ```
 
