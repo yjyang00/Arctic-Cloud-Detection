@@ -288,5 +288,26 @@ test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
 knn.pred=knn(train.X, test.X, datatrain$label, k=10)
 table(knn.pred, datatest$label)
 mean(knn.pred == datatest$label)
+
+
+knn.pred=predict(caret::knn3(train.X, as.factor(datatrain$label), k=10), test.X)
+
+pred = c()
+for (i in 1:nrow(knn.pred)){
+  prob0 = knn.pred[i,1]
+  prob1 = knn.pred[i,2]
+  pred=c(pred, ifelse(prob0>prob1, 0, 1))
+}
+
+knn.score=attr(knn.pred,"prob")
+
+knn.roc=roc(datatest$label,knn.score)
+plot(knn.roc,print.thres=TRUE,print.auc=TRUE,main="KNN")
+knn.thre=coords(knn.roc,"best")[[1]]
+knn.exp=rep(0,length(knn.score))
+knn.exp[knn.score>=0.98]=1
+knn.cm=confusionMatrix(data=as.factor(knn.exp), reference = as.factor(datatest$label))
+knn.cm
 ```
+
 
