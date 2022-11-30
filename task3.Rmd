@@ -165,8 +165,13 @@ nb.roc=roc(datatest$label,nb.score)
 # KNN
 train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
 test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
-knn.pred = knn(train.X, test.X, datatrain$label, k=10)
-knn.score = attr(knn.pred,"prob") 
+knn.pred = knn(train.X, test.X, datatrain$label, k=10,prob=TRUE)
+knn.score = attr(knn.pred,"prob")
+for(i in 1:length(knn.score)){
+  if(knn.pred[i]==0){
+    knn.score[i]=1-knn.score[i]
+  }
+}
 knn.roc=roc(datatest$label,knn.score)
 
 
@@ -197,8 +202,9 @@ plot(glm.roc,print.thres=TRUE,print.auc=TRUE,main="Logistic Regression")
 plot(lda.roc,print.thres=TRUE,print.auc=TRUE,main="LDA")
 plot(qda.roc,print.thres=TRUE,print.auc=TRUE,main="QDA")
 plot(nb.roc,print.thres=TRUE,print.auc=TRUE,main="Naive Bayes")
+plot(knn.roc,print.thres=TRUE,print.auc=TRUE,main="knn")
 plot(rf.roc,print.thres=TRUE,print.auc=TRUE,main="Random Forest")
-plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")z
+plot(adaboost.roc,print.thres=TRUE,print.auc=TRUE,main="Adaboost")
 ```
 
 ```{r}
@@ -207,6 +213,7 @@ rocvalue=rbind(
   coords(lda.roc, "best"),
   coords(qda.roc, "best"),
   coords(nb.roc, "best"),
+  coords(knn.roc,"best"),
   coords(rf.roc, "best"),
   coords(adaboost.roc, "best")
 )
@@ -253,11 +260,19 @@ nb.cm=confusionMatrix(data=as.factor(nb.exp), reference = as.factor(datatest$lab
 nb.cm
 ```
 
+```{r}
+# knn
+knn.exp=rep(0,length(knn.score))
+knn.exp[knn.score>rocvalue[5,1]]=1
+knn.cm=confusionMatrix(data=as.factor(knn.exp), reference = as.factor(datatest$label))
+knn.cm
+```
+
 
 ```{r}
 # rf
 rf.exp=rep(0,length(rf.score))
-rf.exp[rf.score>rocvalue[5,1]]=1
+rf.exp[rf.score>rocvalue[6,1]]=1
 rf.cm=confusionMatrix(data=as.factor(rf.exp), reference = as.factor(datatest$label))
 rf.cm
 ```
@@ -266,7 +281,7 @@ rf.cm
 ```{r}
 # adaboost
 adaboost.exp=rep(0,length(adaboost.score))
-adaboost.exp[adaboost.score>rocvalue[6,1]]=1
+adaboost.exp[adaboost.score>rocvalue[7,1]]=1
 adaboost.cm=confusionMatrix(data=as.factor(adaboost.exp), reference = as.factor(datatest$label))
 adaboost.cm
 ```
@@ -277,6 +292,7 @@ round(glm.cm$table/sum,3)
 round(lda.cm$table/sum,3)
 round(qda.cm$table/sum,3)
 round(nb.cm$table/sum,3)
+round(knn.cm$table/sum,3)
 round(rf.cm$table/sum,3)
 round(adaboost.cm$table/sum,3)
 ```
