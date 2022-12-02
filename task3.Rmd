@@ -312,11 +312,6 @@ knn.cm
 
 # Task 4
 ## a Diagnostic plots
-Decision Trees
-```{r}
-source("CVmaster.R")
-```
-
 ```{r}
 # plot the tree: systematic
 datatrain = image.syst.train %>% 
