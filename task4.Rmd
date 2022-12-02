@@ -54,7 +54,9 @@ write.csv(rf.acc,'rfacc.csv')
 
 ```{r}
 ggplot(data.frame(rf.acc),aes(x=ntree,y=acc,group=as.factor(mtry),color=as.factor(mtry))) +
-  geom_line()
+  geom_line()+
+  labs(color="mtry", y="Accuracy", x = "ntree")+
+  theme_bw()
 ```
 
 ```{r}
