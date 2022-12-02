@@ -1,0 +1,196 @@
+---
+title: "task4"
+author: "Huiying"
+date: "2022-11-30"
+output: html_document
+---
+
+```{r}
+library(randomForest)
+```
+
+
+```{r}
+# choose random forest
+# ntree, mtry
+train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+rf.fit1 = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3)
+```
+
+```{r}
+rf.fit1$importance
+varImpPlot(rf.fit1)
+```
+
+```{r}
+mtry=c(2,3,4,8)
+ntree=c(1,5,10,20,50,100,200,500,1000,2000,3000)
+rffit=function(mtry,ntree){
+  rf.fit = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = mtry, ntree=ntree)
+  rf.pred = predict(rf.fit, datatest)
+  acc=mean(rf.pred==datatest$label)
+  return(acc)
+}
+```
+
+```{r}
+N=length(ntree)
+M=length(mtry)
+rf.acc=matrix(ncol=3,nrow=N*M)
+colnames(rf.acc)=c("acc","mtry","ntree")
+t=1
+for(i in 1:length(mtry)){
+  for(j in 1:length(ntree)){
+    rf.acc[t,]=c(rffit(mtry[i],ntree[j]),mtry[i],ntree[j])
+    t=t+1
+  }
+}
+```
+
+```{r}
+write.csv(rf.acc,'rfacc.csv')
+```
+
+```{r}
+ggplot(data.frame(rf.acc),aes(x=ntree,y=acc,group=as.factor(mtry),color=as.factor(mtry))) +
+  geom_line()
+```
+
+```{r}
+# choose mtry=4, ntree=500
+rf.fit = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 4, ntree=500,importance=TRUE)
+rf.fit$importance
+varImpPlot(rf.fit)
+```
+
+```{r}
+# rf model for the whole image
+pred1 = predict(rf.fit, imagem1)
+pred2 = predict(rf.fit, imagem2)
+pred3 = predict(rf.fit, imagem3)
+# to be consistent with the label
+label1=as.numeric(pred1)*2-3
+label2=as.numeric(pred2)*2-3
+label3=as.numeric(pred3)*2-3
+probs1=predict(rf.fit,imagem1,type="prob")[,2]
+probs2=predict(rf.fit,imagem2,type="prob")[,2]
+probs3=predict(rf.fit,imagem3,type="prob")[,2]
+```
+
+```{r}
+p1 = imagem1 %>%
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
+  geom_point()+
+  scale_color_manual(values = c("grey", "white"))+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+
+p2 = imagem2 %>%
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
+  geom_point()+
+  scale_color_manual(values = c("grey", "white"))+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+
+p3 = imagem3 %>%
+  filter(label!=0) %>%
+  ggplot(aes(x = x, y = y, col = factor(label)))+
+  geom_point()+
+  scale_color_manual(values = c("grey", "white"))+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+
+# image1
+df1=data.frame(imagem1,pred1,label1,probs1,error=label1-imagem1$label)
+p11 = df1 %>%
+  ggplot(aes(x = x, y = y, col = probs1))+
+  geom_point()+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p12 = df1 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  labs(x = "x", y = "y")+
+    theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+# image2
+df2=data.frame(imagem2,pred2,label2,probs2,error=label2-imagem2$label)
+p21 = df2 %>%
+  ggplot(aes(x = x, y = y, col = probs2))+
+  geom_point()+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p22 = df2 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  labs(x = "x", y = "y")+
+    theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+# image3
+df3=data.frame(imagem3,pred3,label3,probs3,error=label3-imagem3$label)
+p31 = df3 %>%
+  ggplot(aes(x = x, y = y, col = probs3))+
+  geom_point()+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p32 = df3 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  labs(x = "x", y = "y")+
+    theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+p1+p2+p3+p11+p21+p31+p12+p22+p32+plot_layout(nrow = 3, ncol = 3)
+```
+
+
