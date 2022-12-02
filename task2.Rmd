@@ -179,24 +179,23 @@ To ensure the ensuing classifier in section 3 is not trivial, we first examine t
 
 ```{r baseline}
 # accuracy on validation set (1st split)
-set.seed(111)
+set.seed(123)
 
 idx = sample(unique(image.syst.train$fold), size = 1)
 image.syst.val = image.syst.train[image.syst.train$fold==idx,]
 
-acc.val.syst = sum(image.syst.val$label==-1)/length(image.syst.val$label)
+acc.val.syst = sum(image.syst.val$label==-1)/sum(image.syst.val$label!=0)
 
 # accuracy on validation set (2nd split)
-idx = sample(unique(image.buf.train$fold), size = 1)
 image.buf.val = image.buf.train[image.buf.train$fold==idx,]
 
-acc.val.buf = sum(image.buf.val$label==-1)/length(image.buf.val$label)
+acc.val.buf = sum(image.buf.val$label==-1)/sum(image.buf.val$label!=0)
 
 # accuracy on test set (1st split)
-acc.test.syst = sum(image.syst.test$label==-1)/length(image.syst.test$label)
+acc.test.syst = sum(image.syst.test$label==-1)/sum(image.syst.test$label!=0)
 
 # accuracy on test set (2nd split)
-acc.test.buf = sum(image.buf.test$label==-1)/length(image.buf.test$label)
+acc.test.buf = sum(image.buf.test$label==-1)/sum(image.buf.test$label!=0)
 
 # output the table
 rbind(
