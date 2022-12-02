@@ -310,4 +310,39 @@ knn.cm=confusionMatrix(data=as.factor(knn.exp), reference = as.factor(datatest$l
 knn.cm
 ```
 
+# Task 4
+## a Diagnostic plots
+Decision Trees
+```{r}
+source("CVmaster.R")
+```
+
+```{r}
+# plot the tree: systematic
+datatrain = image.syst.train %>% 
+  filter(label != 0)
+datatrain$label[datatrain$label == -1] = 0
+
+library(rpart.plot)
+rf.fit = rpart(as.factor(label)~NDAI+SD+CORR+DF+CF+BF+AF+AN, data=datatrain)
+rpart.plot(rf.fit)
+
+# plot the tree: buffer
+datatrain = image.buf.train %>% 
+  filter(label != 0)
+datatrain$label[datatrain$label == -1] = 0
+
+library(rpart.plot)
+rf.fit = rpart(as.factor(label)~NDAI+SD+CORR+DF+CF+BF+AF+AN, data=datatrain)
+rpart.plot(rf.fit)
+ggsave("tree_buffer.png")
+```
+
+
+
+
+
+
+
+
 
