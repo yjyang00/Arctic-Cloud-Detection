@@ -63,3 +63,14 @@ plot(boruta_output,cex.axis=.7,las=2,xlab="",main="Variable Importance")
 
 ref https://www.machinelearningplus.com/machine-learning/feature-selection/
 
+
+```{r}
+## remove unlabel
+imagebind=rbind(data.frame(imagem1,image=1),
+                data.frame(imagem2,image=2),
+                data.frame(imagem3,image=3))
+imagebind2=imagebind%>%filter(label!=0)
+## correlation 
+cor(imagebind2[,4:11],imagebind2[,3])
+```
+
