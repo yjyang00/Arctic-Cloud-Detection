@@ -81,45 +81,6 @@ probs3=predict(rf.fit,imagem3,type="prob")[,2]
 ```
 
 ```{r}
-p1 = imagem1 %>%
-  filter(label!=0) %>%
-  ggplot(aes(x = x, y = y, col = factor(label)))+
-  geom_point()+
-  scale_color_manual(values = c("grey", "white"))+
-  labs(x = "x", y = "y")+
-  theme(legend.position = "none",
-        panel.border = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "black"))+
-  tune::coord_obs_pred()
-
-p2 = imagem2 %>%
-  filter(label!=0) %>%
-  ggplot(aes(x = x, y = y, col = factor(label)))+
-  geom_point()+
-  scale_color_manual(values = c("grey", "white"))+
-  labs(x = "x", y = "y")+
-  theme(legend.position = "none",
-        panel.border = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "black"))+
-  tune::coord_obs_pred()
-
-p3 = imagem3 %>%
-  filter(label!=0) %>%
-  ggplot(aes(x = x, y = y, col = factor(label)))+
-  geom_point()+
-  scale_color_manual(values = c("grey", "white"))+
-  labs(x = "x", y = "y")+
-  theme(legend.position = "none",
-        panel.border = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "black"))+
-  tune::coord_obs_pred()
-
 # image1
 df1=data.frame(imagem1,pred1,label1,probs1,error=label1-imagem1$label)
 p11 = df1 %>%
@@ -173,9 +134,9 @@ df3=data.frame(imagem3,pred3,label3,probs3,error=label3-imagem3$label)
 p31 = df3 %>%
   ggplot(aes(x = x, y = y, col = probs3))+
   geom_point()+
+  scale_color_continuous(name="probablity of being cloudy(1)") +
   labs(x = "x", y = "y")+
-  theme(legend.position = "none",
-        panel.border = element_blank(),
+  theme(panel.border = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "black"))+
@@ -185,14 +146,14 @@ p32 = df3 %>%
   filter(error!=0) %>%
   ggplot(aes(x=x,y=y,color=as.factor(error))) +
   geom_point() +
+  scale_color_discrete(name="error",labels=c("cloudy predicted as clear","clear predicted as cloudy")) +
   labs(x = "x", y = "y")+
-    theme(legend.position = "none",
-        panel.border = element_blank(),
+    theme(panel.border = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank()) +
   tune::coord_obs_pred()
 
-p1+p2+p3+p11+p21+p31+p12+p22+p32+plot_layout(nrow = 3, ncol = 3)
+p11+p21+p31+p12+p22+p32+plot_layout(nrow = 2, ncol = 3)
 ```
 
 

@@ -1,0 +1,329 @@
+---
+title: "task4"
+author: "Huiying"
+date: "2022-12-01"
+output: html_document
+---
+
+```{r}
+library(MASS)
+library(class)
+library(randomForest)
+library(tidyverse)
+library(caret)
+library(gbm)
+library(e1071)
+library(pROC)
+```
+
+```{r}
+## buffering
+datatrain = image.buf.train %>% 
+  filter(label != 0)
+datatrain$label[datatrain$label == -1] = 0
+datatest = image.buf.test %>% 
+  filter(label != 0)
+datatest$label[datatest$label == -1] = 0
+  
+model_formula = as.formula("label~NDAI+SD+CORR+DF+CF+BF+AF+AN")
+  
+# logistic regression
+glm.fit2 = glm(model_formula, data = datatrain, family = binomial)
+glm.probs2 = predict(glm.fit2, datatest, type="response")
+glm.pred2 = rep(0, length(glm.probs2))
+glm.pred2[glm.probs2 > 0.5] = 1
+glm.roc2=roc(datatest$label,glm.probs2)
+    
+# LDA
+lda.fit2 = lda(model_formula, data = datatrain)
+lda.pred2 = predict(lda.fit2, datatest)
+lda.score2=lda.pred2$posterior[,2]
+lda.roc2=roc(datatest$label,lda.score2)
+    
+# QDA
+qda.fit2 = qda(model_formula, data = datatrain)
+qda.pred2 = predict(qda.fit2, datatest)
+qda.score2=qda.pred2$posterior[,2]
+qda.roc2=roc(datatest$label,qda.score2)
+
+# Naive Bayes
+nb.fit2 = naiveBayes(model_formula, data = datatrain)
+nb.pred2 = predict(nb.fit2, datatest)
+nb.score2=predict(nb.fit2,datatest,type="raw")[,2]
+nb.roc2=roc(datatest$label,nb.score2)
+  
+# KNN
+train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
+knn.pred2 = knn(train.X, test.X, datatrain$label, k=10,prob=TRUE)
+knn.score2 = attr(knn.pred2,"prob")
+for(i in 1:length(knn.score2)){
+  if(knn.pred2[i]==0){
+    knn.score2[i]=1-knn.score2[i]
+  }
+} 
+knn.roc2=roc(datatest$label,knn.score2)
+
+
+# Random forest
+train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+rf.fit2 = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3)
+rf.pred2 = predict(rf.fit2, datatest)
+rf.score2=predict(rf.fit2,datatest,type="prob")[,2]
+rf.roc2=roc(datatest$label,rf.score2)
+  
+# Adaboost
+adaboost.fit2 = gbm(as.character(label) ~ NDAI+SD+CORR+DF+CF+BF+AF+AN, 
+            data = datatrain, 
+            distribution = "adaboost", 
+            n.trees = 3000, 
+            interaction.depth = 4)
+adaboost.pred2 = predict(adaboost.fit2, datatest)
+adaboost.pred2[adaboost.pred2 >= 0.5] = 1
+adaboost.pred2[adaboost.pred2 < 0.5] = 0
+adaboost.score2=predict(adaboost.fit2,datatest)
+adaboost.roc2=roc(datatest$label,adaboost.score2)
+```
+
+```{r}
+par(mfrow=c(2,4))
+plot(glm.roc2,print.thres=TRUE,print.auc=TRUE,main="Logistic Regression")
+plot(lda.roc2,print.thres=TRUE,print.auc=TRUE,main="LDA")
+plot(qda.roc2,print.thres=TRUE,print.auc=TRUE,main="QDA")
+plot(nb.roc2,print.thres=TRUE,print.auc=TRUE,main="Naive Bayes")
+plot(knn.roc2,print.thres=TRUE,print.auc=TRUE,main="knn")
+plot(rf.roc2,print.thres=TRUE,print.auc=TRUE,main="Random Forest")
+plot(adaboost.roc2,print.thres=TRUE,print.auc=TRUE,main="Adaboost")
+```
+
+```{r}
+rocvalue2=rbind(
+  coords(glm.roc2, "best"),
+  coords(lda.roc2, "best"),
+  coords(qda.roc2, "best"),
+  coords(nb.roc2, "best"),
+  coords(knn.roc2,"best"),
+  coords(rf.roc2, "best"),
+  coords(adaboost.roc2, "best")
+)
+rocvalue2
+```
+ref:
+https://stats.stackexchange.com/questions/61521/cut-off-point-in-a-roc-curve-is-there-a-simple-function
+https://blog.csdn.net/solo7773/article/details/8699693?spm=1001.2101.3001.6650.11&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-11-8699693-blog-122552363.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-11-8699693-blog-122552363.pc_relevant_aa&utm_relevant_index=15
+
+```{r}
+# logistic
+glm.exp2 = rep(0, length(glm.probs2))
+glm.exp2[glm.probs2 > rocvalue2[1,1]] = 1
+glm.cm2=confusionMatrix(data=as.factor(glm.exp2), reference = as.factor(datatest$label))
+glm.cm2
+```
+
+```{r}
+# lda
+lda.exp2=rep(0,length(lda.score2))
+lda.exp2[lda.score2>rocvalue2[2,1]]=1
+lda.cm2=confusionMatrix(data=as.factor(lda.exp2), reference = as.factor(datatest$label))
+lda.cm2
+```
+
+
+```{r}
+# qda
+qda.exp2=rep(0,length(qda.score2))
+qda.exp2[qda.score2>rocvalue2[3,1]]=1
+qda.cm2=confusionMatrix(data=as.factor(qda.exp2), reference = as.factor(datatest$label))
+qda.cm2
+```
+
+
+```{r}
+# nb
+nb.exp2=rep(0,length(nb.score2))
+nb.exp2[nb.score2>rocvalue2[4,1]]=1
+nb.cm2=confusionMatrix(data=as.factor(nb.exp2), reference = as.factor(datatest$label))
+nb.cm2
+```
+
+```{r}
+# knn
+knn.exp2=rep(0,length(knn.score2))
+knn.exp2[knn.score2>rocvalue2[5,1]]=1
+knn.cm2=confusionMatrix(data=as.factor(knn.exp2), reference = as.factor(datatest$label))
+knn.cm2
+```
+
+```{r}
+# rf
+rf.exp2=rep(0,length(rf.score2))
+rf.exp2[rf.score2>rocvalue2[6,1]]=1
+rf.cm2=confusionMatrix(data=as.factor(rf.exp2), reference = as.factor(datatest$label))
+rf.cm2
+```
+
+```{r}
+# adaboost
+adaboost.exp2=rep(0,length(adaboost.score2))
+adaboost.exp2[adaboost.score2>rocvalue2[7,1]]=1
+adaboost.cm2=confusionMatrix(data=as.factor(adaboost.exp2), reference = as.factor(datatest$label))
+adaboost.cm2
+```
+
+```{r}
+sum=length(datatest$label)
+round(glm.cm2$table/sum,3)
+round(lda.cm2$table/sum,3)
+round(qda.cm2$table/sum,3)
+round(nb.cm2$table/sum,3)
+round(knn.cm2$table/sum,3)
+round(rf.cm2$table/sum,3)
+round(adaboost.cm2$table/sum,3)
+```
+
+```{r}
+## buffering
+datatrain = image.buf.train %>% 
+  filter(label != 0)
+datatrain$label[datatrain$label == -1] = 0
+datatest = image.buf.test %>% 
+  filter(label != 0)
+datatest$label[datatest$label == -1] = 0
+
+train.X = datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+test.X = datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")]
+```
+
+```{r}
+mtry=c(2,3,4,8)
+ntree=c(1,5,10,20,50,100,200,500,1000,2000,3000)
+rffit=function(mtry,ntree){
+  rf.fit = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = mtry, ntree=ntree)
+  rf.pred = predict(rf.fit, datatest)
+  acc=mean(rf.pred==datatest$label)
+  return(acc)
+}
+```
+
+```{r}
+N=length(ntree)
+M=length(mtry)
+rf.acc2=matrix(ncol=3,nrow=N*M)
+colnames(rf.acc2)=c("acc","mtry","ntree")
+t=1
+for(i in 1:length(mtry)){
+  for(j in 1:length(ntree)){
+    rf.acc2[t,]=c(rffit(mtry[i],ntree[j]),mtry[i],ntree[j])
+    t=t+1
+  }
+}
+```
+
+```{r}
+ggplot(data.frame(rf.acc2),aes(x=ntree,y=acc,group=as.factor(mtry),color=as.factor(mtry))) +
+  geom_line()+
+  labs(color="mtry", y="Accuracy", x = "ntree")+
+  theme_bw()
+```
+
+
+```{r}
+# choose mtry=3, ntree=500
+rf.fit2 = randomForest(x = train.X, y = as.factor(datatrain$label), mtry = 3, ntree=500,importance=TRUE)
+rf.fit2$importance
+varImpPlot(rf.fit2)
+```
+
+```{r}
+# rf model for the whole image
+pred1 = predict(rf.fit2, imagem1)
+pred2 = predict(rf.fit2, imagem2)
+pred3 = predict(rf.fit2, imagem3)
+# to be consistent with the label
+label1=as.numeric(pred1)*2-3
+label2=as.numeric(pred2)*2-3
+label3=as.numeric(pred3)*2-3
+probs1=predict(rf.fit2,imagem1,type="prob")[,2]
+probs2=predict(rf.fit2,imagem2,type="prob")[,2]
+probs3=predict(rf.fit2,imagem3,type="prob")[,2]
+```
+
+```{r}
+# image1
+df1=data.frame(imagem1,pred1,label1,probs1,error=label1-imagem1$label)
+p11 = df1 %>%
+  ggplot(aes(x = x, y = y, col = probs1))+
+  geom_point()+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p12 = df1 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  labs(x = "x", y = "y")+
+    theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+# image2
+df2=data.frame(imagem2,pred2,label2,probs2,error=label2-imagem2$label)
+p21 = df2 %>%
+  ggplot(aes(x = x, y = y, col = probs2))+
+  geom_point()+
+  labs(x = "x", y = "y")+
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p22 = df2 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  labs(x = "x", y = "y")+
+    theme(legend.position = "none",
+        panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+# image3
+df3=data.frame(imagem3,pred3,label3,probs3,error=label3-imagem3$label)
+p31 = df3 %>%
+  ggplot(aes(x = x, y = y, col = probs3))+
+  geom_point()+
+  scale_color_continuous(name="probablity of being cloudy(1)") +
+  labs(x = "x", y = "y")+
+  theme(panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "black"))+
+  tune::coord_obs_pred()
+p32 = df3 %>%
+  filter(label!=0) %>%
+  filter(error!=0) %>%
+  ggplot(aes(x=x,y=y,color=as.factor(error))) +
+  geom_point() +
+  scale_color_discrete(name="error",labels=c("cloudy predicted as clear","clear predicted as cloudy")) +
+  labs(x = "x", y = "y")+
+    theme(panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+  tune::coord_obs_pred()
+
+p11+p21+p31+p12+p22+p32+plot_layout(nrow = 2, ncol = 3)
+```
+
+
+

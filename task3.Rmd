@@ -298,6 +298,40 @@ round(adaboost.cm$table/sum,3)
 ```
 
 ```{r}
+glm.cm$table
+lda.cm$table
+qda.cm$table
+nb.cm$table
+knn.cm$table
+rf.cm$table
+adaboost.cm$table
+```
+
+
+```{r}
+library(pheatmap)
+```
+
+```{r}
+pheatmap(glm.cm$table/sum,
+         color = colorRampPalette(c("white","navy"))(50),
+         cluster_rows=FALSE,cluster_cols=FALSE,
+         display_numbers=TRUE,fontsize_number=30,fontsize_row=30,fontsize_col=30,
+         width=5,height=5)
+pheatmap(lda.cm$table/sum,
+         color = colorRampPalette(c("white","navy"))(50),
+         cluster_rows=FALSE,cluster_cols=FALSE,
+         display_numbers=TRUE,fontsize_number=30,fontsize_row=30,fontsize_col=30,
+         width=5,height=5)
+pheatmap(qda.cm$table/sum,
+         color = colorRampPalette(c("white","navy"))(50),
+         cluster_rows=FALSE,cluster_cols=FALSE,
+         display_numbers=TRUE,fontsize_number=30,fontsize_row=30,fontsize_col=30,
+         width=5,height=5)
+```
+
+
+```{r}
 train.X = scale(datatrain[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
 test.X = scale(datatest[, c("NDAI", "SD", "CORR", "DF", "CF", "BF", "AF", "AN")])
 
