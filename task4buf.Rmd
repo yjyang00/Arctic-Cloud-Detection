@@ -303,7 +303,7 @@ df3=data.frame(imagem3,pred3,label3,probs3,error=label3-imagem3$label)
 p31 = df3 %>%
   ggplot(aes(x = x, y = y, col = probs3))+
   geom_point()+
-  scale_color_continuous(name="probablity of being cloudy(1)") +
+  scale_color_continuous(name="probability of being cloudy(1)") +
   labs(x = "x", y = "y")+
   theme(panel.border = element_blank(),
           panel.grid.major = element_blank(),
