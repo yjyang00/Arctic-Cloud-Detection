@@ -982,7 +982,7 @@ rocvalue2
 # logistic
 glm.exp2 = rep(0, length(glm.probs2))
 glm.exp2[glm.probs2 > rocvalue2[1,1]] = 1
-glm.cm2=confusionMatrix(data=as.factor(glm.exp2), reference = as.factor(datatest$label))
+glm.cm2=confusionMatrix(data=as.factor(glm.exp2), reference = as.factor(datatest$label), mode="everything")
 glm.cm2
 ```
 
@@ -990,7 +990,7 @@ glm.cm2
 # lda
 lda.exp2=rep(0,length(lda.score2))
 lda.exp2[lda.score2>rocvalue2[2,1]]=1
-lda.cm2=confusionMatrix(data=as.factor(lda.exp2), reference = as.factor(datatest$label))
+lda.cm2=confusionMatrix(data=as.factor(lda.exp2), reference = as.factor(datatest$label), mode="everything")
 lda.cm2
 ```
 
@@ -998,7 +998,7 @@ lda.cm2
 # qda
 qda.exp2=rep(0,length(qda.score2))
 qda.exp2[qda.score2>rocvalue2[3,1]]=1
-qda.cm2=confusionMatrix(data=as.factor(qda.exp2), reference = as.factor(datatest$label))
+qda.cm2=confusionMatrix(data=as.factor(qda.exp2), reference = as.factor(datatest$label), mode="everything")
 qda.cm2
 ```
 
@@ -1006,7 +1006,7 @@ qda.cm2
 # nb
 nb.exp2=rep(0,length(nb.score2))
 nb.exp2[nb.score2>rocvalue2[4,1]]=1
-nb.cm2=confusionMatrix(data=as.factor(nb.exp2), reference = as.factor(datatest$label))
+nb.cm2=confusionMatrix(data=as.factor(nb.exp2), reference = as.factor(datatest$label), mode="everything")
 nb.cm2
 ```
 
@@ -1014,7 +1014,7 @@ nb.cm2
 # knn
 knn.exp2=rep(0,length(knn.score2))
 knn.exp2[knn.score2>rocvalue2[5,1]]=1
-knn.cm2=confusionMatrix(data=as.factor(knn.exp2), reference = as.factor(datatest$label))
+knn.cm2=confusionMatrix(data=as.factor(knn.exp2), reference = as.factor(datatest$label), mode="everything")
 knn.cm2
 ```
 
@@ -1022,7 +1022,7 @@ knn.cm2
 # rf
 rf.exp2=rep(0,length(rf.score2))
 rf.exp2[rf.score2>rocvalue2[6,1]]=1
-rf.cm2=confusionMatrix(data=as.factor(rf.exp2), reference = as.factor(datatest$label))
+rf.cm2=confusionMatrix(data=as.factor(rf.exp2), reference = as.factor(datatest$label), mode="everything")
 rf.cm2
 ```
 
@@ -1030,7 +1030,7 @@ rf.cm2
 # adaboost
 adaboost.exp2=rep(0,length(adaboost.score2))
 adaboost.exp2[adaboost.score2>rocvalue2[7,1]]=1
-adaboost.cm2=confusionMatrix(data=as.factor(adaboost.exp2), reference = as.factor(datatest$label))
+adaboost.cm2=confusionMatrix(data=as.factor(adaboost.exp2), reference = as.factor(datatest$label), mode="everything")
 adaboost.cm2
 ```
 
