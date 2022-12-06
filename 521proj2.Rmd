@@ -631,7 +631,7 @@ https://blog.csdn.net/solo7773/article/details/8699693?spm=1001.2101.3001.6650.1
 # logistic
 glm.exp = rep(0, length(glm.probs))
 glm.exp[glm.probs > rocvalue[1,1]] = 1
-glm.cm=confusionMatrix(data=as.factor(glm.exp), reference = as.factor(datatest$label))
+glm.cm=confusionMatrix(data=as.factor(glm.exp), reference = as.factor(datatest$label), mode="everything")
 glm.cm
 ```
 
@@ -640,7 +640,7 @@ glm.cm
 # lda
 lda.exp=rep(0,length(lda.score))
 lda.exp[lda.score>rocvalue[2,1]]=1
-lda.cm=confusionMatrix(data=as.factor(lda.exp), reference = as.factor(datatest$label))
+lda.cm=confusionMatrix(data=as.factor(lda.exp), reference = as.factor(datatest$label), mode="everything")
 lda.cm
 ```
 
@@ -649,7 +649,7 @@ lda.cm
 # qda
 qda.exp=rep(0,length(qda.score))
 qda.exp[qda.score>rocvalue[3,1]]=1
-qda.cm=confusionMatrix(data=as.factor(qda.exp), reference = as.factor(datatest$label))
+qda.cm=confusionMatrix(data=as.factor(qda.exp), reference = as.factor(datatest$label), mode="everything")
 qda.cm
 ```
 
@@ -658,7 +658,7 @@ qda.cm
 # nb
 nb.exp=rep(0,length(nb.score))
 nb.exp[nb.score>rocvalue[4,1]]=1
-nb.cm=confusionMatrix(data=as.factor(nb.exp), reference = as.factor(datatest$label))
+nb.cm=confusionMatrix(data=as.factor(nb.exp), reference = as.factor(datatest$label), mode="everything")
 nb.cm
 ```
 
@@ -666,7 +666,7 @@ nb.cm
 # knn
 knn.exp=rep(0,length(knn.score))
 knn.exp[knn.score>rocvalue[5,1]]=1
-knn.cm=confusionMatrix(data=as.factor(knn.exp), reference = as.factor(datatest$label))
+knn.cm=confusionMatrix(data=as.factor(knn.exp), reference = as.factor(datatest$label), mode="everything")
 knn.cm
 ```
 
@@ -674,7 +674,7 @@ knn.cm
 # rf
 rf.exp=rep(0,length(rf.score))
 rf.exp[rf.score>rocvalue[6,1]]=1
-rf.cm=confusionMatrix(data=as.factor(rf.exp), reference = as.factor(datatest$label))
+rf.cm=confusionMatrix(data=as.factor(rf.exp), reference = as.factor(datatest$label), mode="everything")
 rf.cm
 ```
 
@@ -683,7 +683,7 @@ rf.cm
 # adaboost
 adaboost.exp=rep(0,length(adaboost.score))
 adaboost.exp[adaboost.score>rocvalue[7,1]]=1
-adaboost.cm=confusionMatrix(data=as.factor(adaboost.exp), reference = as.factor(datatest$label))
+adaboost.cm=confusionMatrix(data=as.factor(adaboost.exp), reference = as.factor(datatest$label), mode="everything")
 adaboost.cm
 ```
 
