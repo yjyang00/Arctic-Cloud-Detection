@@ -12,7 +12,7 @@ We conduct classification methods to detect the presence of cloud from satellite
 ### Reproducibility
 To reproduce our results, we provide the following files:  
 
-* `data`: the three images obtained by the MISR sensor
+* `imagem1.txt`, `imagem2.txt`, `imagem3.txt`: the three images obtained by the MISR sensor
 * `PROJ2-writeup.tex`: the raw Latex used to generate the report  
 * `PROJ2-code.rmd`: the code written for all parts. One can get all the figures and plots by running the code chunk by chunk. In detail, part 1 is to load data, plot labeled maps and perform EDA, part 2 is to do data split, calculate baseline accuracy and find the best features, part 3 is to compare different models using multiple ways, and part 4 is to further diagnose the random forest model.  
 * `CVmaster.R`: the generic cross validation function that outputs the K-fold corss validation loss on the training set.  
